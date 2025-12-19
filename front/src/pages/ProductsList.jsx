@@ -1,33 +1,39 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { productsAPI } from "../services/api"
 import LoadingSpinner from "../components/LoadingSpinner"
 import ErrorMessage from "../components/ErrorMessage"
 
-export default function ProductsList() {
+function ProductsList() {
+  // states pour stocker les donnees
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [search, setSearch] = useState("")
-  const [selectedTag, setSelectedTag] = useState("")
+  const [tagFiltre, setTagFiltre] = useState("")
 
+  // charger les produits au demarrage et quand les filtres changent
   useEffect(() => {
-    fetchProducts()
-  }, [search, selectedTag])
+    chargerProduits()
+  }, [search, tagFiltre])
 
-  const fetchProducts = async () => {
+  // fonction pour recuperer les produits depuis l'API
+  async function chargerProduits() {
     setLoading(true)
     setError("")
     
     try {
-      const params = {}
-      if (search) params.q = search
-      if (selectedTag) params.tag = selectedTag
+      // preparer les parametres de recherche
+      let params = {}
+      if (search !== "") {
+        params.q = search
+      }
+      if (tagFiltre !== "") {
+        params.tag = tagFiltre
+      }
 
-      const response = await productsAPI.getAll(params)
-      setProducts(response.data.products)
+      const reponse = await productsAPI.getAll(params)
+      setProducts(reponse.data.products)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -35,126 +41,155 @@ export default function ProductsList() {
     }
   }
 
-  // Extract unique tags from products
-  const allTags = [...new Set(products.flatMap((p) => p.tags))]
+  // extraire tous les tags uniques des produits
+  let tousLesTags = []
+  for (let i = 0; i < products.length; i++) {
+    let produit = products[i]
+    if (produit.tags) {
+      for (let j = 0; j < produit.tags.length; j++) {
+        let tag = produit.tags[j]
+        if (!tousLesTags.includes(tag)) {
+          tousLesTags.push(tag)
+        }
+      }
+    }
+  }
+
+  // fonction pour vider les filtres
+  function viderFiltres() {
+    setSearch("")
+    setTagFiltre("")
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Tout les produits</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Tous les produits</h1>
       </div>
 
+      {/* Barre de recherche et filtres */}
       <div className="mb-8 bg-white rounded-lg shadow p-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Recherche de Produit</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Rechercher un produit
+            </label>
             <input
               type="text"
-              placeholder="Search by name or description..."
+              placeholder="Rechercher par nom ou description..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="sm:w-48">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Filtrer par tag</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Filtrer par tag
+            </label>
             <select
-              value={selectedTag}
-              onChange={(e) => setSelectedTag(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              value={tagFiltre}
+              onChange={(e) => setTagFiltre(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Tout</option>
-              {allTags.map((tag) => (
-                <option key={tag} value={tag}>
-                  {tag}
-                </option>
+              <option value="">Tous</option>
+              {tousLesTags.map((tag) => (
+                <option key={tag} value={tag}>{tag}</option>
               ))}
             </select>
           </div>
         </div>
-        {(search || selectedTag) && (
+
+        {/* Afficher les filtres actifs */}
+        {(search || tagFiltre) && (
           <div className="mt-4 flex items-center gap-2">
-            <span className="text-sm text-gray-600">Active filters:</span>
+            <span className="text-sm text-gray-600">Filtres actifs:</span>
             {search && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">Recherche: {search}</span>
+              <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                Recherche: {search}
+              </span>
             )}
-            {selectedTag && (
-              <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">Tag: {selectedTag}</span>
+            {tagFiltre && (
+              <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">
+                Tag: {tagFiltre}
+              </span>
             )}
-            <button
-              onClick={() => {
-                setSearch("")
-                setSelectedTag("")
-              }}
-              className="text-sm text-red-600 hover:text-red-700"
-            >
-              Nettoyage
+            <button onClick={viderFiltres} className="text-sm text-red-600 hover:text-red-700">
+              Effacer
             </button>
           </div>
         )}
       </div>
 
-      {/* Loading State */}
+      {/* Affichage du chargement */}
       {loading && <LoadingSpinner />}
 
-      {/* Error State */}
-      {error && <ErrorMessage message={error} onRetry={fetchProducts} />}
+      {/* Affichage des erreurs */}
+      {error && <ErrorMessage message={error} onRetry={chargerProduits} />}
 
-      {/* Products Grid */}
+      {/* Liste des produits */}
       {!loading && !error && (
         <>
           {products.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow">
-              <p className="text-xl text-gray-500">No products found</p>
-              {(search || selectedTag) && (
-                <button
-                  onClick={() => {
-                    setSearch("")
-                    setSelectedTag("")
-                  }}
-                  className="mt-4 text-primary hover:underline"
-                >
-                  Clear filters
+              <p className="text-xl text-gray-500">Aucun produit trouve</p>
+              {(search || tagFiltre) && (
+                <button onClick={viderFiltres} className="mt-4 text-blue-600 hover:underline">
+                  Effacer les filtres
                 </button>
               )}
             </div>
           ) : (
             <>
               <div className="mb-4 text-sm text-gray-600">
-                Showing {products.length} {products.length === 1 ? "product" : "products"}
+                {products.length} produit{products.length > 1 ? "s" : ""} trouve{products.length > 1 ? "s" : ""}
               </div>
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {products.map((product) => (
+                {products.map((produit) => (
                   <Link
-                    key={product._id}
-                    to={`/products/${product._id}`}
-                    className="bg-white rounded-lg shadow hover:shadow-lg transition group"
+                    key={produit._id}
+                    to={"/products/" + produit._id}
+                    className="bg-white rounded-lg shadow hover:shadow-lg transition"
                   >
+                    {/* Image du produit */}
+                    {produit.image && (
+                      <div className="h-48 overflow-hidden rounded-t-lg">
+                        <img 
+                          src={produit.image} 
+                          alt={produit.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    
                     <div className="p-6">
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-primary transition">
-                        {product.name}
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">
+                        {produit.name}
                       </h3>
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {produit.description}
+                      </p>
 
                       <div className="flex justify-between items-center mb-4">
-                        <span className="text-2xl font-bold text-primary">${product.price.toFixed(2)}</span>
-                        <span
-                          className={`text-sm ${product.stock > 0 ? "text-green-600" : "text-red-600"} font-medium`}
-                        >
-                          {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+                        <span className="text-2xl font-bold text-blue-600">
+                          {produit.price.toFixed(2)} €
+                        </span>
+                        <span className={produit.stock > 0 ? "text-green-600 text-sm" : "text-red-600 text-sm"}>
+                          {produit.stock > 0 ? produit.stock + " en stock" : "Rupture"}
                         </span>
                       </div>
 
-                      {product.tags && product.tags.length > 0 && (
+                      {/* Afficher les tags */}
+                      {produit.tags && produit.tags.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {product.tags.slice(0, 3).map((tag) => (
+                          {produit.tags.slice(0, 3).map((tag) => (
                             <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
                               {tag}
                             </span>
                           ))}
-                          {product.tags.length > 3 && (
+                          {produit.tags.length > 3 && (
                             <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded">
-                              +{product.tags.length - 3} more
+                              +{produit.tags.length - 3}
                             </span>
                           )}
                         </div>
@@ -170,3 +205,5 @@ export default function ProductsList() {
     </div>
   )
 }
+
+export default ProductsList

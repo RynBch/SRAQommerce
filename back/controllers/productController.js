@@ -1,198 +1,199 @@
 import Product from "../models/Product.js"
 
-/**
- * Create new product (seller only)
- * POST /api/products
- */
+// Creer un nouveau produit
 export const createProduct = async (req, res, next) => {
   try {
-    const { name, description, price, stock, category, tags, image } = req.body
-
-    const product = await Product.create({
-      name,
-      description,
-      price,
-      stock,
-      category,
-      tags: tags || [],
-      image,
-      seller: req.user._id,
+    const data = req.body
+    
+    // on cree le produit avec les infos du formulaire
+    const newProduct = new Product({
+      name: data.name,
+      description: data.description,
+      price: data.price,
+      stock: data.stock,
+      category: data.category,
+      tags: data.tags || [],
+      image: data.image || "",
+      seller: req.user._id
     })
-
+    
+    await newProduct.save()
+    
     res.status(201).json({
       success: true,
-      message: "Product created successfully",
-      product,
+      message: "Produit cree avec succes",
+      product: newProduct
     })
-  } catch (error) {
-    next(error)
+  } catch (err) {
+    next(err)
   }
 }
 
-/**
- * Get all products (public)
- * GET /api/products?q=&tag=&page=&limit=
- */
+// Recuperer tous les produits avec filtres
 export const getProducts = async (req, res, next) => {
   try {
-    const { q, tag, page = 1, limit = 10 } = req.query
-
-    const query = {}
-
+    const { q, tag, category, page, limit } = req.query
+    
+    // filtre de recherche
+    let filtre = {}
+    
+    // recherche par nom ou description avec regex
     if (q) {
-      query.$text = { $search: q }
+      filtre.$or = [
+        { name: { $regex: q, $options: "i" } },
+        { description: { $regex: q, $options: "i" } }
+      ]
     }
-
     if (tag) {
-      query.tags = tag
+      filtre.tags = tag
     }
-
-    const pageNumber = Number(page)
-    const limitNumber = Number(limit)
-    const skip = (pageNumber - 1) * limitNumber
-
-    const products = await Product.find(query)
+    if (category) {
+      filtre.category = category
+    }
+    
+    // pagination
+    const pageNum = parseInt(page) || 1
+    const limitNum = parseInt(limit) || 10
+    const skip = (pageNum - 1) * limitNum
+    
+    // requete avec populate pour avoir les infos du vendeur
+    const products = await Product.find(filtre)
       .populate("seller", "username email")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limitNumber)
-
-    const total = await Product.countDocuments(query)
-
+      .limit(limitNum)
+    
+    const total = await Product.countDocuments(filtre)
+    
     res.json({
       success: true,
-      products,
+      products: products,
       pagination: {
-        page: pageNumber,
-        limit: limitNumber,
-        total,
-        pages: Math.ceil(total / limitNumber),
-      },
+        page: pageNum,
+        limit: limitNum,
+        total: total,
+        pages: Math.ceil(total / limitNum)
+      }
     })
-  } catch (error) {
-    next(error)
+  } catch (err) {
+    next(err)
   }
 }
 
-/**
- * Get single product by ID (public)
- * GET /api/products/:id
- */
+// Recuperer un produit par son ID
 export const getProductById = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id)
+    const productId = req.params.id
+    
+    const product = await Product.findById(productId)
       .populate("seller", "username email")
-
+    
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found",
+        message: "Produit introuvable"
       })
     }
-
+    
     res.json({
       success: true,
-      product,
+      product: product
     })
-  } catch (error) {
-    next(error)
+  } catch (err) {
+    next(err)
   }
 }
 
-/**
- * Update product (seller only)
- * PATCH /api/products/:id
- */
+// Modifier un produit
 export const updateProduct = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id)
-
+    const productId = req.params.id
+    
+    // on cherche le produit
+    const product = await Product.findById(productId)
+    
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found",
+        message: "Produit introuvable"
       })
     }
-
-    // Check ownership
+    
+    // verifier que c'est bien le vendeur qui modifie
     if (product.seller.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
-        message: "Not authorized to update this product",
+        message: "Vous n'avez pas le droit de modifier ce produit"
       })
     }
-
-    // Update allowed fields
-    const { name, description, price, stock, category, tags, image } = req.body
-
-    if (name !== undefined) product.name = name
-    if (description !== undefined) product.description = description
-    if (price !== undefined) product.price = price
-    if (stock !== undefined) product.stock = stock
-    if (category !== undefined) product.category = category
-    if (tags !== undefined) product.tags = tags
-    if (image !== undefined) product.image = image
-
+    
+    // mise a jour des champs
+    const data = req.body
+    
+    if (data.name) product.name = data.name
+    if (data.description) product.description = data.description
+    if (data.price !== undefined) product.price = data.price
+    if (data.stock !== undefined) product.stock = data.stock
+    if (data.category) product.category = data.category
+    if (data.tags) product.tags = data.tags
+    if (data.image !== undefined) product.image = data.image
+    
     await product.save()
-
+    
     res.json({
       success: true,
-      message: "Product updated successfully",
-      product,
+      message: "Produit modifie avec succes",
+      product: product
     })
-  } catch (error) {
-    next(error)
+  } catch (err) {
+    next(err)
   }
 }
 
-/**
- * Delete product (seller only)
- * DELETE /api/products/:id
- */
+// Supprimer un produit
 export const deleteProduct = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id)
-
+    const productId = req.params.id
+    
+    const product = await Product.findById(productId)
+    
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found",
+        message: "Produit introuvable"
       })
     }
-
-    // Check ownership
+    
+    // verifier que c'est le bon vendeur
     if (product.seller.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
-        message: "Not authorized to delete this product",
+        message: "Vous n'avez pas le droit de supprimer ce produit"
       })
     }
-
+    
     await product.deleteOne()
-
+    
     res.json({
       success: true,
-      message: "Product deleted successfully",
+      message: "Produit supprime"
     })
-  } catch (error) {
-    next(error)
+  } catch (err) {
+    next(err)
   }
 }
 
-/**
- * Get products of current seller
- * GET /api/products/my/products
- */
+// Recuperer mes produits (vendeur connecte)
 export const getMyProducts = async (req, res, next) => {
   try {
-    const products = await Product.find({ seller: req.user._id })
+    const mesProduits = await Product.find({ seller: req.user._id })
       .sort({ createdAt: -1 })
-
+    
     res.json({
       success: true,
-      products,
+      products: mesProduits
     })
-  } catch (error) {
-    next(error)
+  } catch (err) {
+    next(err)
   }
 }
