@@ -4,6 +4,7 @@ import dotenv from "dotenv"
 import connectDB from "./config/db.js"
 import authRoutes from "./routes/authRoutes.js"
 import productRoutes from "./routes/productRoutes.js"
+import ordersRoutes from "./routes/orders.Routes.js"
 import { errorHandler, notFound } from "./middlewares/errorHandler.js"
 
 // Load environment variables
@@ -33,7 +34,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes)
 app.use("/api/products", productRoutes)
-
+app.use('/api/orders', ordersRoutes);
 // Error handling
 app.use(notFound)
 app.use(errorHandler)
