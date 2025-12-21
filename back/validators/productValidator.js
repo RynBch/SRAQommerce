@@ -25,7 +25,7 @@ export const productSchema = Joi.object({
   image: Joi.string().allow("").default("")
 })
 
-// Schema pour la mise a jour (tous les champs optionnels)
+// Schema pour  la maj  (en option)
 export const productUpdateSchema = Joi.object({
   name: Joi.string().max(100),
   description: Joi.string().max(1000),
@@ -34,7 +34,7 @@ export const productUpdateSchema = Joi.object({
   category: Joi.string(),
   tags: Joi.array().items(Joi.string()),
   image: Joi.string().allow("")
-}).min(1) // il faut au moins un champ
+}).min(1)                                // il faut au moins un champ
 
 // Middleware de validation
 export const validate = (schema) => {
@@ -42,7 +42,7 @@ export const validate = (schema) => {
     const result = schema.validate(req.body, { abortEarly: false })
     
     if (result.error) {
-      // on recupere tous les messages d'erreur
+      // on recup tous les messages d'erreur
       const erreurs = result.error.details.map(err => err.message)
       
       return res.status(400).json({
