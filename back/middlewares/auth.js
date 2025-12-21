@@ -56,3 +56,21 @@ export const isSeller = (req, res, next) => {
   }
   next()
 }
+export const isClient = (req, res, next) => {
+    // On verifie si l'utilisateur est connecte
+    if (!req.user) {
+        return res.status(401).json({ 
+            message: 'Vous devez etre connecte' 
+        });
+    }
+    
+    // On verifie si c'est un vendeur
+    if (req.user.role !== 'customer') {
+        return res.status(403).json({ 
+            message: 'Acces refuse. Seuls les clients peuvent faire ca.' 
+        });
+    }
+    
+    // Si tout est ok, on continue
+    next();
+};
