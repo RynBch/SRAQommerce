@@ -59,5 +59,18 @@ export const productsAPI = {
   delete: (id) => api.delete(`/products/${id}`),
   getMyProducts: () => api.get("/products/my/products"),
 }
+export const ordersAPI = {
+  getOrdersAll: (params) => api.get("/orders/", { params }),
+  getOrderById: (id) => api.get(`/orders/${id}`),
+  getMyOrders: () => api.get(`/orders/my-orders`),
+  createOrder: (data) => api.post("/orders/", data),
+  updateOrder: (id, data) => api.patch(`/orders/${id}`, data),
+  deleteOrder: (id) => api.delete(`/orders/${id}`), 
+}
+
+
+
+
+
 
 export default api

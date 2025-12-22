@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
 import Header from "./components/Header"
 import ProtectedRoute from "./components/ProtectedRoute"
+import ProtectedRouteCustomer from "./components/ProtectedRoute"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
@@ -10,6 +11,7 @@ import ProductsList from "./pages/ProductsList"
 import ProductDetails from "./pages/ProductDetails"
 import ProductForm from "./pages/ProductForm"
 import MyProducts from "./pages/MyProducts"
+import MyOrders from "./pages/MyOrders"
 
 function App() {
   return (
@@ -52,6 +54,14 @@ function App() {
               element={
                 <ProtectedRoute requireSeller>
                   <MyProducts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-orders"
+              element={
+                <ProtectedRoute requireCusto>
+                  <MyOrders />
                 </ProtectedRoute>
               }
             />

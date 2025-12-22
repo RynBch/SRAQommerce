@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 
 export default function Header() {
-  const { user, logout, isAuthenticated, isSeller } = useAuth()
+  const { user, logout, isAuthenticated, isSeller, isCusto } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -31,6 +31,10 @@ export default function Header() {
                 {isSeller && (
                   <Link to="/my-products" className="text-gray-700 hover:text-primary transition">
                     Mes Produits
+                  </Link>
+                )}{isCusto && (
+                  <Link to="/my-orders" className="text-gray-700 hover:text-primary transition">
+                    Mes Commandes
                   </Link>
                 )}
                 <Link to="/profile" className="text-gray-700 hover:text-primary transition">

@@ -31,10 +31,10 @@ export const GetOrdersByClient = async (req, res) => {
 
 
 export const CreateOrder = async (req, res) => {
-  const {productArray } = req.body;
-
+  const productArray = req.body.productArray;
+  const clientId = req.user._id;
   const result = await ordersService.Create({
-    clientId : req.user._id, 
+    clientId,
     productArray
   });
 
