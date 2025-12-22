@@ -30,8 +30,8 @@ function MyOrders() {
       if (search !== "") {
         params.q = search
       }
-      
       const reponse = await ordersAPI.getMyOrders()
+      console.log(reponse.data.data)
       setOrders(reponse.data.data)
     } catch (err) {
       setError(err.message)
@@ -103,21 +103,59 @@ function MyOrders() {
                         Voici votre commande du {commande.createdAt}
                       </h3>
                       <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                        {commande.status}
+                        Status : {commande.status}
                       </p>
                       <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                         Les produits de la commandes : 
                       </p>
-                      
-                      {//inserer ici
-                      commande.productArray.map((products) => (
-                        <div className="bg-white rounded-lg shadow hover:shadow-lg transition">
-                        {products}
-                        </div>
-                      ))
-                      }
-                      
-                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+                        {commande.productArray.map((produit) => (
+                        <>
+                          {/* Image du produit */}
+                          {produit.image && (
+                            <div className="h-48 overflow-hidden rounded-t-lg">
+                              <img 
+                                src={produit.image} 
+                                alt={produit.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="p-6">
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">
+                              {produit.name}
+                            </h3>
+                            <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                              {produit.description}
+                            </p>
+
+                            <div className="flex justify-between items-center mb-4">
+                              <span className="text-2xl font-bold text-blue-600">
+                                {produit.price} €
+                              </span>
+              
+                            </div>
+
+                            {/* Afficher les tags */}
+                            {produit.tags && produit.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {produit.tags.slice(0, 3).map((tag) => (
+                                  <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                                    {tag}
+                                  </span>
+                                ))}
+                                {produit.tags.length > 3 && (
+                                  <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded">
+                                    +{produit.tags.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </> 
+                        ))}                      
+                     </div>
                   </div>
                 ))}
               </div>
