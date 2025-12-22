@@ -12,27 +12,27 @@ import {
 
 const router = express.Router()
 
-// --- Routes publiques ---
+                   // --- Routes publiques ---
 
-// GET /api/products - liste des produits
+//  liste des produits
 router.get("/", getProducts)
 
-// GET /api/products/:id - detail d'un produit
+// id - detail d'un produit
 router.get("/:id", getProductById)
 
-// --- Routes protegees (il faut etre connecte et vendeur) ---
+                     // --- Routes pv ---
 
-// GET /api/products/my/products - mes produits
-// important: cette route doit etre avant /:id sinon "my" sera pris comme un id
+//  mes produits
+
 router.get("/my/products", auth, isSeller, getMyProducts)
 
-// POST /api/products - creer un produit
+// creer un produit
 router.post("/", auth, isSeller, validate(productSchema), createProduct)
 
-// PATCH /api/products/:id - modifier un produit
+// id - modifier un produit
 router.patch("/:id", auth, isSeller, validate(productUpdateSchema), updateProduct)
 
-// DELETE /api/products/:id - supprimer un produit
+// id - supprimer un produit
 router.delete("/:id", auth, isSeller, deleteProduct)
 
 export default router
