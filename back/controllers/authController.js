@@ -2,17 +2,14 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import User from "../models/User.js"
 
-// Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "1h" })
 }
 
-// Register new user
 export const register = async (req, res, next) => {
   try {
     const { email, username, password, role } = req.body
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email })
     if (existingUser) {
       return res.status(400).json({
@@ -21,11 +18,9 @@ export const register = async (req, res, next) => {
       })
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10)
     const passwordHash = await bcrypt.hash(password, salt)
 
-    // Create user
     const user = await User.create({
       email,
       username,
@@ -33,7 +28,6 @@ export const register = async (req, res, next) => {
       role: role || "customer",
     })
 
-    // Generate token
     const token = generateToken(user._id)
 
     res.status(201).json({
@@ -52,12 +46,10 @@ export const register = async (req, res, next) => {
   }
 }
 
-// Login user
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body
 
-    // Find user by email
     const user = await User.findOne({ email })
     if (!user) {
       return res.status(401).json({
@@ -66,7 +58,6 @@ export const login = async (req, res, next) => {
       })
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.passwordHash)
     if (!isMatch) {
       return res.status(401).json({
@@ -75,7 +66,6 @@ export const login = async (req, res, next) => {
       })
     }
 
-    // Generate token
     const token = generateToken(user._id)
 
     res.json({
@@ -94,7 +84,6 @@ export const login = async (req, res, next) => {
   }
 }
 
-// Get current user profile
 export const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id).select("-passwordHash")

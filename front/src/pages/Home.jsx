@@ -8,7 +8,6 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      {/* Hero Section */}
       <div className="text-center mb-16">
         <h1 className="text-5xl font-bold text-gray-900 mb-4">Bienvenu sur SRAQommerce</h1>
         <p className="text-xl text-gray-600 mb-8">Pour votre sante, acheter 5 hoddies et pendules par jour</p>
@@ -31,7 +30,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Features */}
       <div className="grid md:grid-cols-3 gap-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
