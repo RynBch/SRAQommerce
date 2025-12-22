@@ -79,7 +79,6 @@ export const GetByClient = async (id) => { // order =>  {order.clientId === id}
 export const Create = async (data) => {
   try {
     const { clientId, productArray} = data;
-
     const newOrderData = {
       clientId, 
       productArray
